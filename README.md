@@ -13,6 +13,7 @@ First, construct the `BinarySegmenter`:
 For [PyTorch](https://pytorch.org/) (e.g. with [Segmentation Models PyTorch](https://smp.readthedocs.io/en/latest/)):
 
 ```python
+# $ pip install segmentation-models-pytorch
 import segmentation_models_pytorch as smp
 from conflux_segmentation import BinarySegmenter
 
@@ -35,6 +36,7 @@ segmenter = BinarySegmenter.from_onnxruntime_session(session)
 Then, to segment a large image:
 
 ```python
+# $ pip install opencv-python-headless
 import cv2
 
 # H x W x 3 image array of np.uint8

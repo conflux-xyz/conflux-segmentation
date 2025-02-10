@@ -1,12 +1,17 @@
 [tool.poetry]
 name = "conflux-segmentation"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Tile-based inference for segmentation of large images."
 readme = "README.md"
+authors = ["Conflux"]
+maintainers = ["Conflux"]
+repository = "https://github.com/conflux-xyz/conflux-segmentation"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/conflux-xyz/conflux-segmentation/issues"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<4.0"
 numpy = "^1"
 torch = {version = "^2", optional = true}
 onnxruntime = {version = "^1", optional = true}
