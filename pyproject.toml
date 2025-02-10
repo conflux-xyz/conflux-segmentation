@@ -11,7 +11,7 @@ repository = "https://github.com/conflux-xyz/conflux-segmentation"
 "Bug Tracker" = "https://github.com/conflux-xyz/conflux-segmentation/issues"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.10,<4.0"
 numpy = "^1"
 torch = {version = "^2", optional = true}
 onnxruntime = {version = "^1", optional = true}
