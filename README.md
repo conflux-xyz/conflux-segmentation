@@ -1,6 +1,8 @@
 # Conflux Segmentation
 
-A Python library for patch-based segmentation of large images.
+A Python library for tile-based inference for segmentation of large images.
+
+Assuming you have a segmentation model that operates on tiles (e.g. 512 x 512), this library provides the plumbing to apply that model on a large image and handles the padding, striding, and blending to apply the model across the entire image.
 
 ## Usage
 
@@ -8,29 +10,29 @@ A Python library for patch-based segmentation of large images.
 
 First, construct the `BinarySegmenter`:
 
-For PyTorch (with Segmentation Models PyTorch):
+For [PyTorch](https://pytorch.org/) (e.g. with [Segmentation Models PyTorch](https://smp.readthedocs.io/en/latest/)):
 
 ```python
 import segmentation_models_pytorch as smp
-from conflux_segmentation.torch import get_binary_segmenter
+from conflux_segmentation import BinarySegmenter
 
 net = smp.Unet(encoder_name="tu-mobilenetv3_small_100", encoder_weights=None, activation=None)
 net.load_state_dict(torch.load("/path/to/weights", weights_only=True))
 net.eval()
-segmenter = get_binary_segmenter(net)
+segmenter = BinarySegmenter.from_pytorch_module(net)
 ```
 
-Or, for ONNX:
+Or, for [ONNX Runtime](https://onnxruntime.ai/):
 
 ```python
 import onnxruntime as ort
 from conflux_segmentation.onnx import get_binary_segmenter
 
 session = ort.InferenceSession("/path/to/model.onnx")
-segmenter = get_binary_segmenter(session)
+segmenter = BinarySegmenter.from_onnxruntime_session(session)
 ```
 
-Then, to segment a large image in patches:
+Then, to segment a large image:
 
 ```python
 import cv2

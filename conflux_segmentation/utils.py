@@ -29,17 +29,17 @@ def gaussian_weights(
     return (weights / np.max(weights)).astype(np.float32)
 
 
-def _get_pad(size: int, patch_size: int, stride: int) -> int:
-    if size < patch_size:
-        return patch_size - size
-    remainder = (size - patch_size) % stride
+def _get_pad(size: int, tile_size: int, stride: int) -> int:
+    if size < tile_size:
+        return tile_size - size
+    remainder = (size - tile_size) % stride
     if remainder == 0:
         return 0
     return stride - remainder
 
 
-def get_padding(size: int, patch_size: int, stride: int) -> tuple[int, int]:
-    pad = _get_pad(size, patch_size, stride)
+def get_padding(size: int, tile_size: int, stride: int) -> tuple[int, int]:
+    pad = _get_pad(size, tile_size, stride)
     if pad == 0:
         return 0, 0
     pad_before = pad // 2
