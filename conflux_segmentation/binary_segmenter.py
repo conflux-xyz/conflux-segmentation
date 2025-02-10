@@ -9,7 +9,7 @@ from conflux_segmentation.utils import gaussian_weights, get_padding
 
 if TYPE_CHECKING:
     import torch
-    import onnxruntime as ort   # type: ignore[import-untyped]
+    import onnxruntime as ort  # type: ignore[import-untyped]
 
 
 class BinarySegmenter:
