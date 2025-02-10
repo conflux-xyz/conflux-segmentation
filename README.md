@@ -26,7 +26,7 @@ Or, for [ONNX Runtime](https://onnxruntime.ai/):
 
 ```python
 import onnxruntime as ort
-from conflux_segmentation.onnx import get_binary_segmenter
+from conflux_segmentation import BinarySegmenter
 
 session = ort.InferenceSession("/path/to/model.onnx")
 segmenter = BinarySegmenter.from_onnxruntime_session(session)
