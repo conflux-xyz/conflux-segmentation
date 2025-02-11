@@ -42,8 +42,9 @@ import cv2
 # H x W x 3 image array of np.uint8
 image = cv2.cvtColor(cv2.imread("/path/to/large/image"), cv2.COLOR_BGR2RGB)
 
+result = segmenter(image)
 # H x W boolean array
-mask = segmenter(image)
+mask = result.get_mask()
 assert mask.shape == image.shape[:2]
 assert (mask == True).sum() + (mask == False).sum() == mask.size
 ```

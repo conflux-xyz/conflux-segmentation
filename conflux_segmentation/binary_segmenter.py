@@ -12,6 +12,20 @@ if TYPE_CHECKING:
     import onnxruntime as ort  # type: ignore[import-untyped]
 
 
+class BinarySegmentationResult:
+    def __init__(
+        self,
+        probabilities: npt.NDArray[np.float32],
+    ) -> None:
+        self.probabilities = probabilities
+
+    def get_mask(self, threshold: float = 0.5) -> npt.NDArray[np.bool_]:
+        return self.probabilities > threshold
+
+    def get_mask_proba(self) -> npt.NDArray[np.float32]:
+        return self.probabilities
+
+
 class BinarySegmenter:
     def __init__(
         self,
@@ -21,7 +35,6 @@ class BinarySegmenter:
         blend_mode: Literal["gaussian", "flat"] = "gaussian",
         pad_value: int = 255,
         batch_size: int = 1,
-        threshold: float = 0.5,
     ) -> None:
         self.tile_segmenter = tile_segmenter
         if blend_mode == "gaussian":
@@ -32,9 +45,8 @@ class BinarySegmenter:
         self.pad_value = pad_value
         self.stride = round(tile_size * (1 - overlap))
         self.batch_size = batch_size
-        self.threshold = threshold
 
-    def __call__(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.bool_]:
+    def __call__(self, image: npt.NDArray[np.uint8]) -> BinarySegmentationResult:
         assert image.ndim == 3, "Input image must have 3 dimensions (H x W x C)"
         H, W, _C = image.shape
         pad_y = get_padding(H, self.tile_size, self.stride)
@@ -46,11 +58,11 @@ class BinarySegmenter:
             mode="constant",
             constant_values=self.pad_value,
         )
-        mask_padded = self._segment(image_padded)
-        mask = mask_padded[pad_y[0] : -pad_y[1], pad_x[0] : -pad_x[1]]
-        return mask
+        probs_padded = self._segment(image_padded)
+        probs = probs_padded[pad_y[0] : -pad_y[1], pad_x[0] : -pad_x[1]]
+        return BinarySegmentationResult(probs)
 
-    def _segment(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.bool_]:
+    def _segment(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
         H, W, _C = image.shape
 
         # Initialize the output mask
@@ -86,15 +98,13 @@ class BinarySegmenter:
                     self.blend_weights
                 )
 
-        return (
-            np.divide(
-                output_probs,
-                output_weights,
-                out=np.zeros_like(output_probs),
-                where=output_weights != 0,
-            )
-            > self.threshold
-        )
+        probs = np.divide(
+            output_probs,
+            output_weights,
+            out=np.zeros_like(output_probs, dtype=np.float32),
+            where=output_weights != 0,
+        ).astype(np.float32)
+        return probs
 
     @staticmethod
     def from_pytorch_module(
@@ -106,7 +116,6 @@ class BinarySegmenter:
         blend_mode: Literal["gaussian", "flat"] = "gaussian",
         pad_value: int = 255,
         batch_size: int = 1,
-        threshold: float = 0.5,
     ) -> "BinarySegmenter":
         from .torch import TorchBinaryTileSegmenter
 
@@ -118,7 +127,6 @@ class BinarySegmenter:
             blend_mode,
             pad_value,
             batch_size,
-            threshold,
         )
 
     @staticmethod
@@ -131,7 +139,6 @@ class BinarySegmenter:
         blend_mode: Literal["gaussian", "flat"] = "gaussian",
         pad_value: int = 255,
         batch_size: int = 1,
-        threshold: float = 0.5,
     ) -> "BinarySegmenter":
         from .onnx import OnnxBinaryTileSegmenter
 
@@ -143,5 +150,4 @@ class BinarySegmenter:
             blend_mode,
             pad_value,
             batch_size,
-            threshold,
         )
