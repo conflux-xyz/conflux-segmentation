@@ -2,6 +2,7 @@
 name = "conflux-segmentation"
 version = "0.1.0"
 description = "Tile-based inference for segmentation of large images."
+license = "Apache-2.0"
 readme = "README.md"
 authors = ["Conflux"]
 maintainers = ["Conflux"]
