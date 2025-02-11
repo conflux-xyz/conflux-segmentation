@@ -50,7 +50,7 @@ def test_binary_segmenter_call():
 
     # Test segmentation
     result = segmenter(image)
-    mask = result.get_boolean_mask()
+    mask = result.get_mask()
 
     # Check output properties
     assert isinstance(mask, np.ndarray)
@@ -59,8 +59,8 @@ def test_binary_segmenter_call():
 
     # Verify padding doesn't change output dimensions
     image = np.zeros((50, 75, 3), dtype=np.uint8)
-    result = segmenter(image) 
-    mask = result.get_boolean_mask()
+    result = segmenter(image)
+    mask = result.get_mask()
     assert mask.shape == (50, 75)
 
 

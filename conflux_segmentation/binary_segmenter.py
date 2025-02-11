@@ -19,11 +19,11 @@ class BinarySegmentationResult:
     ) -> None:
         self.probabilities = probabilities
 
-    def get_probabilities(self) -> npt.NDArray[np.float32]:
-        return self.probabilities
-
-    def get_boolean_mask(self, threshold: float = 0.5) -> npt.NDArray[np.bool_]:
+    def get_mask(self, threshold: float = 0.5) -> npt.NDArray[np.bool_]:
         return self.probabilities > threshold
+
+    def get_mask_proba(self) -> npt.NDArray[np.float32]:
+        return self.probabilities
 
 
 class BinarySegmenter:

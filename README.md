@@ -44,7 +44,7 @@ image = cv2.cvtColor(cv2.imread("/path/to/large/image"), cv2.COLOR_BGR2RGB)
 
 result = segmenter(image)
 # H x W boolean array
-mask = result.get_boolean_mask()
+mask = result.get_mask()
 assert mask.shape == image.shape[:2]
 assert (mask == True).sum() + (mask == False).sum() == mask.size
 ```
