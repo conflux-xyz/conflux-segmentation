@@ -2,7 +2,7 @@
 
 A Python library for tile-based inference for segmentation of large images.
 
-Assuming you have a segmentation model that operates on tiles (e.g. 512 x 512), this library provides the plumbing to apply that model on a large image and handles the padding, striding, and blending to apply the model across the entire image.
+Assuming you have a segmentation model that operates on tiles (e.g. 512 x 512), this library provides the plumbing to apply that model on a large image -- handling the padding, striding, and blending required.
 
 ## Usage
 
@@ -23,6 +23,10 @@ net = smp.Unet(encoder_name="tu-mobilenetv3_small_100", encoder_weights=None, ac
 net.load_state_dict(torch.load("/path/to/weights", weights_only=True))
 net.eval()
 segmenter = Segmenter.from_pytorch_module(net, activation="sigmoid")
+# Alternatively, if your model already has a Sigmoid layer at the end:
+# import torch.nn as nn
+# sigmoid_net = nn.Sequential(net, nn.Sigmoid()).eval()
+# segmenter = Segmenter.from_pytorch_module(net)
 ```
 
 Or, for [ONNX Runtime](https://onnxruntime.ai/):
