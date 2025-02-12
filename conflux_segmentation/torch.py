@@ -1,17 +1,19 @@
-from typing import cast, Literal, Optional
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
 import torch
 
-from conflux_segmentation.tile_segmenter import BinaryTileSegmenterBase
+from .tile_segmenter import TileSegmenterBase
+from .utils import ActivationType
 
 
-class TorchBinaryTileSegmenter(BinaryTileSegmenterBase):
+class TorchTileSegmenter(TileSegmenterBase):
     def __init__(
         self,
         model: torch.nn.Module,
-        activation: Optional[Literal["sigmoid"]] = "sigmoid",
+        *,
+        activation: ActivationType = None,
     ) -> None:
         self.model = model.eval()
         self.activation = activation
@@ -22,4 +24,6 @@ class TorchBinaryTileSegmenter(BinaryTileSegmenterBase):
             output = self.model(x)
             if self.activation == "sigmoid":
                 output = output.sigmoid()
+            elif self.activation == "softmax":
+                output = output.softmax(dim=1)
             return cast(npt.NDArray[np.float32], output.cpu().numpy())

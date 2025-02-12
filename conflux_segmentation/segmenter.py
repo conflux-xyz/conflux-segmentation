@@ -1,52 +1,46 @@
-from typing import Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
 
-from conflux_segmentation.tile_segmenter import BinaryTileSegmenterBase
-from conflux_segmentation.utils import gaussian_weights, get_padding
-
+from .tile_segmenter import TileSegmenterBase
+from .segmentation_result import SegmentationResult
+from .utils import ActivationType, BlendModeType, gaussian_weights, get_padding
 
 if TYPE_CHECKING:
     import torch
     import onnxruntime as ort  # type: ignore[import-untyped]
 
 
-class BinarySegmentationResult:
+class Segmenter:
     def __init__(
         self,
-        probabilities: npt.NDArray[np.float32],
-    ) -> None:
-        self.probabilities = probabilities
-
-    def get_mask(self, threshold: float = 0.5) -> npt.NDArray[np.bool_]:
-        return self.probabilities > threshold
-
-    def get_mask_proba(self) -> npt.NDArray[np.float32]:
-        return self.probabilities
-
-
-class BinarySegmenter:
-    def __init__(
-        self,
-        tile_segmenter: BinaryTileSegmenterBase,
+        tile_segmenter: TileSegmenterBase,
+        *,
+        num_classes: int = 1,
         tile_size: int = 512,
         overlap: float = 0.125,
-        blend_mode: Literal["gaussian", "flat"] = "gaussian",
+        blend_mode: BlendModeType = "gaussian",
         pad_value: int = 255,
         batch_size: int = 1,
     ) -> None:
+        assert num_classes > 0, "Number of classes must be greater than 0"
+        self.num_classes = num_classes
         self.tile_segmenter = tile_segmenter
         if blend_mode == "gaussian":
-            self.blend_weights = gaussian_weights(tile_size)
+            # Expand dims to [H, W, 1] to broadcast across channels
+            self.blend_weights = gaussian_weights(tile_size)[..., None]
         else:
-            self.blend_weights = np.ones((tile_size, tile_size), dtype=np.float32)
+            self.blend_weights = np.ones((tile_size, tile_size, 1), dtype=np.float32)
         self.tile_size = tile_size
-        self.pad_value = pad_value
         self.stride = round(tile_size * (1 - overlap))
+        self.pad_value = pad_value
         self.batch_size = batch_size
 
-    def __call__(self, image: npt.NDArray[np.uint8]) -> BinarySegmentationResult:
+    def __call__(self, image: npt.NDArray[np.uint8]) -> SegmentationResult:
+        return SegmentationResult(self._segment(image))
+
+    def _segment(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
         assert image.ndim == 3, "Input image must have 3 dimensions (H x W x C)"
         H, W, _C = image.shape
         pad_y = get_padding(H, self.tile_size, self.stride)
@@ -58,18 +52,18 @@ class BinarySegmenter:
             mode="constant",
             constant_values=self.pad_value,
         )
-        probs_padded = self._segment(image_padded)
+        probs_padded = self._segment_padded(image_padded)
         probs = probs_padded[pad_y[0] : -pad_y[1], pad_x[0] : -pad_x[1]]
-        return BinarySegmentationResult(probs)
+        return probs
 
-    def _segment(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
+    def _segment_padded(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
         H, W, _C = image.shape
 
-        # Initialize the output mask
-        output_probs = np.zeros((H, W), dtype=np.float32)
-        output_weights = np.zeros((H, W), dtype=np.float32)
+        # Initialize outputs with class dimension
+        output_probs = np.zeros((H, W, self.num_classes), dtype=np.float32)
+        output_weights = np.zeros((H, W, self.num_classes), dtype=np.float32)
 
-        # Generate list of image tile coordinates. Add 1 to the endpoint to make it inclusive.
+        # Generate tile coordinates
         tile_coords = [
             (y, x)
             for y in range(0, H - self.tile_size + 1, self.stride)
@@ -80,24 +74,26 @@ class BinarySegmenter:
             tile_coords[i : i + self.batch_size]
             for i in range(0, len(tile_coords), self.batch_size)
         ]:
-            # Extract tiles from the image (N x H x W x C)
+            # Extract tiles from image (N x H x W x C)
             tiles = np.stack(
                 [
                     image[y : y + self.tile_size, x : x + self.tile_size]
                     for y, x in tile_coords_batch
                 ]
             )
-            # Move channel dimension (N x C x H x W)
-            tiles = np.transpose(tiles, (0, 3, 1, 2))
+            # Get predictions (N x H x W x num_classes)
             outputs = self.tile_segmenter(tiles)
+
             for (y, x), output in zip(tile_coords_batch, outputs):
                 output_probs[y : y + self.tile_size, x : x + self.tile_size] += (
-                    output * self.blend_weights
+                    output
+                    * self.blend_weights  # blend_weights broadcasts to [H,W,num_classes]
                 )
                 output_weights[y : y + self.tile_size, x : x + self.tile_size] += (
                     self.blend_weights
                 )
 
+        # Blend probabilities
         probs = np.divide(
             output_probs,
             output_weights,
@@ -109,45 +105,49 @@ class BinarySegmenter:
     @staticmethod
     def from_pytorch_module(
         model: "torch.nn.Module",
-        activation: Literal["sigmoid"] = "sigmoid",
         *,
+        activation: ActivationType = None,
+        num_classes: int = 1,
         tile_size: int = 512,
         overlap: float = 0.125,
-        blend_mode: Literal["gaussian", "flat"] = "gaussian",
+        blend_mode: BlendModeType = "gaussian",
         pad_value: int = 255,
         batch_size: int = 1,
-    ) -> "BinarySegmenter":
-        from .torch import TorchBinaryTileSegmenter
+    ) -> "Segmenter":
+        from .torch import TorchTileSegmenter
 
-        tile_segmenter = TorchBinaryTileSegmenter(model, activation)
-        return BinarySegmenter(
+        tile_segmenter = TorchTileSegmenter(model, activation=activation)
+        return Segmenter(
             tile_segmenter,
-            tile_size,
-            overlap,
-            blend_mode,
-            pad_value,
-            batch_size,
+            num_classes=num_classes,
+            tile_size=tile_size,
+            overlap=overlap,
+            blend_mode=blend_mode,
+            pad_value=pad_value,
+            batch_size=batch_size,
         )
 
     @staticmethod
     def from_onnxruntime_session(
         session: "ort.InferenceSession",
-        activation: Literal["sigmoid"] | None = "sigmoid",
         *,
+        activation: ActivationType = None,
+        num_classes: int = 1,
         tile_size: int = 512,
         overlap: float = 0.125,
-        blend_mode: Literal["gaussian", "flat"] = "gaussian",
+        blend_mode: BlendModeType = "gaussian",
         pad_value: int = 255,
         batch_size: int = 1,
-    ) -> "BinarySegmenter":
+    ) -> "Segmenter":
         from .onnx import OnnxBinaryTileSegmenter
 
-        tile_segmenter = OnnxBinaryTileSegmenter(session, activation)
-        return BinarySegmenter(
+        tile_segmenter = OnnxBinaryTileSegmenter(session, activation=activation)
+        return Segmenter(
             tile_segmenter,
-            tile_size,
-            overlap,
-            blend_mode,
-            pad_value,
-            batch_size,
+            num_classes=num_classes,
+            tile_size=tile_size,
+            overlap=overlap,
+            blend_mode=blend_mode,
+            pad_value=pad_value,
+            batch_size=batch_size,
         )

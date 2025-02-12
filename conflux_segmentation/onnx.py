@@ -1,18 +1,19 @@
-from typing import cast, Literal
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
 import onnxruntime as ort  # type: ignore[import-untyped]
 
-from conflux_segmentation.tile_segmenter import BinaryTileSegmenterBase
-from conflux_segmentation.utils import sigmoid
+from .tile_segmenter import TileSegmenterBase
+from .utils import ActivationType, sigmoid, softmax
 
 
-class OnnxBinaryTileSegmenter(BinaryTileSegmenterBase):
+class OnnxBinaryTileSegmenter(TileSegmenterBase):
     def __init__(
         self,
         session: ort.InferenceSession,
-        activation: Literal["sigmoid"] | None = "sigmoid",
+        *,
+        activation: ActivationType = None,
     ) -> None:
         self.session = session
         self.activation = activation
@@ -28,4 +29,6 @@ class OnnxBinaryTileSegmenter(BinaryTileSegmenterBase):
         )
         if self.activation == "sigmoid":
             output = sigmoid(output)
+        elif self.activation == "softmax":
+            output = softmax(output, axis=1)
         return output

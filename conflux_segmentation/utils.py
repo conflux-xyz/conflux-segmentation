@@ -1,7 +1,15 @@
-from typing import Optional
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt
+
+ActivationType = Optional[Literal["sigmoid", "softmax"]]
+BlendModeType = Literal["gaussian", "flat"]
+
+
+def softmax(x: npt.NDArray[np.float32], axis=1) -> npt.NDArray[np.float32]:
+    exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
+    return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
 
 def sigmoid(x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
