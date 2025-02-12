@@ -4,6 +4,12 @@ A Python library for tile-based inference for segmentation of large images.
 
 Assuming you have a segmentation model that operates on tiles (e.g. 512 x 512), this library provides the plumbing to apply that model on a large image -- handling the padding, striding, and blending required.
 
+## Installation
+
+```shell
+pip install conflux-segmentation
+```
+
 ## Usage
 
 The main `Segmenter` class assumes that the underlying tile-based segmenter outputs a multidimensional array of shape N x K x H x W where H and W are the height and width of a tile (e.g. 512), N is the batch size, and K is the output dimension (e.g. 1 for binary and > 1 for multiclass or multilabel).
