@@ -5,7 +5,8 @@ import numpy.typing as npt
 import torch
 
 from .tile_segmenter import TileSegmenterBase
-from .types import ActivationType
+from .types import ActivationType, TilesTransformType
+from .defaults import DEFAULT_ACTIVATION, DEFAULT_TILES_TRANSFORM
 
 
 class TorchTileSegmenter(TileSegmenterBase):
@@ -13,7 +14,8 @@ class TorchTileSegmenter(TileSegmenterBase):
         self,
         model: torch.nn.Module,
         *,
-        activation: ActivationType = None,
+        transform: TilesTransformType = DEFAULT_TILES_TRANSFORM,
+        activation: ActivationType = DEFAULT_ACTIVATION,
         device: Optional[torch.device],
     ) -> None:
         """
@@ -23,6 +25,7 @@ class TorchTileSegmenter(TileSegmenterBase):
         `activation="softmax"` for multiclass.
         If `activation=None`, we assume the model has already normalized the outputs.
         """
+        super().__init__(transform)
         self.model = model.eval()
         self.activation = activation
         self.device = device if device else torch.get_default_device()

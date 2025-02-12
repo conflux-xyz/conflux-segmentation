@@ -9,6 +9,7 @@ from conflux_segmentation.tile_segmenter import TileSegmenterBase
 
 class MockTileSegmenter(TileSegmenterBase):
     def __init__(self, num_classes: int = 1, normalize_probs: bool = False):
+        super().__init__()
         self.num_classes = num_classes
         # True for multiclass, False for binary or multilabel
         self.normalize_probs = normalize_probs
