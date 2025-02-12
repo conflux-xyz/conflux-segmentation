@@ -6,8 +6,8 @@ import onnxruntime as ort  # type: ignore[import-untyped]
 
 from .tile_segmenter import TileSegmenterBase
 from .utils import sigmoid, softmax
-from .types import ActivationType
-from .defaults import DEFAULT_ACTIVATION
+from .types import ActivationType, TilesTransformType
+from .defaults import DEFAULT_ACTIVATION, DEFAULT_TILES_TRANSFORM
 
 
 class OnnxTileSegmenter(TileSegmenterBase):
@@ -15,6 +15,7 @@ class OnnxTileSegmenter(TileSegmenterBase):
         self,
         session: ort.InferenceSession,
         *,
+        transform: TilesTransformType = DEFAULT_TILES_TRANSFORM,
         activation: ActivationType = DEFAULT_ACTIVATION,
     ) -> None:
         """
@@ -24,6 +25,7 @@ class OnnxTileSegmenter(TileSegmenterBase):
         `activation="softmax"` for multiclass.
         If `activation=None`, we assume the model has already normalized the outputs.
         """
+        super().__init__(transform)
         self.session = session
         self.activation = activation
         assert len(self.session.get_inputs()) == 1, "Model must have exactly 1 input"

@@ -3,14 +3,17 @@ from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
 
+from .types import TilesTransformType
+from .defaults import DEFAULT_TILES_TRANSFORM
+
 
 class TileSegmenterBase(ABC):
+    def __init__(self, transform: TilesTransformType = DEFAULT_TILES_TRANSFORM):
+        self.transform = transform
+
     @abstractmethod
     def segment(self, tiles: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         pass
-
-    def transform(self, tiles: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
-        return (tiles / 255).astype(np.float32)
 
     def __call__(self, tiles: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
         """
