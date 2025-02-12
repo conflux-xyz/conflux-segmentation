@@ -10,7 +10,7 @@ from .types import ActivationType
 from .defaults import DEFAULT_ACTIVATION
 
 
-class OnnxBinaryTileSegmenter(TileSegmenterBase):
+class OnnxTileSegmenter(TileSegmenterBase):
     def __init__(
         self,
         session: ort.InferenceSession,

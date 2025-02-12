@@ -112,7 +112,7 @@ class Segmenter:
         return probs
 
     @staticmethod
-    def from_pytorch_module(
+    def from_torch(
         model: "torch.nn.Module",
         *,
         activation: ActivationType = DEFAULT_ACTIVATION,
@@ -138,7 +138,7 @@ class Segmenter:
         )
 
     @staticmethod
-    def from_onnxruntime_session(
+    def from_onnx(
         session: "ort.InferenceSession",
         *,
         activation: ActivationType = DEFAULT_ACTIVATION,
@@ -149,9 +149,9 @@ class Segmenter:
         pad_value: int = DEFAULT_PAD_VALUE,
         batch_size: int = DEFAULT_BATCH_SIZE,
     ) -> "Segmenter":
-        from .onnx import OnnxBinaryTileSegmenter
+        from .onnx import OnnxTileSegmenter
 
-        tile_segmenter = OnnxBinaryTileSegmenter(session, activation=activation)
+        tile_segmenter = OnnxTileSegmenter(session, activation=activation)
         return Segmenter(
             tile_segmenter,
             num_classes=num_classes,

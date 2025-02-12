@@ -22,11 +22,11 @@ from conflux_segmentation import Segmenter
 net = smp.Unet(encoder_name="tu-mobilenetv3_small_100", encoder_weights=None, activation=None)
 net.load_state_dict(torch.load("/path/to/weights", weights_only=True))
 net.eval()
-segmenter = Segmenter.from_pytorch_module(net, activation="sigmoid")
+segmenter = Segmenter.from_torch(net, activation="sigmoid")
 # Alternatively, if your model already has a Sigmoid layer at the end:
 # import torch.nn as nn
 # sigmoid_net = nn.Sequential(net, nn.Sigmoid()).eval()
-# segmenter = Segmenter.from_pytorch_module(net)
+# segmenter = Segmenter.from_torch(net)
 ```
 
 Or, for [ONNX Runtime](https://onnxruntime.ai/):
@@ -36,7 +36,7 @@ import onnxruntime as ort
 from conflux_segmentation import Segmenter
 
 session = ort.InferenceSession("/path/to/model.onnx")
-segmenter = Segmenter.from_onnxruntime_session(session, activation="sigmoid")
+segmenter = Segmenter.from_onnx(session, activation="sigmoid")
 ```
 
 Then, to segment a large image:
