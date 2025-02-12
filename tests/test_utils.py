@@ -2,7 +2,7 @@ import pytest
 
 import numpy as np
 
-from conflux_segmentation.utils import gaussian_weights, get_padding, sigmoid
+from conflux_segmentation.utils import gaussian_weights, get_padding, sigmoid, softmax
 
 
 @pytest.mark.parametrize(
@@ -72,3 +72,11 @@ def test_sigmoid():
     y_2d = sigmoid(x_2d)
     assert y_2d.shape == x_2d.shape
     assert y_2d.dtype == np.float32
+
+
+def test_softmax():
+    # Test basic properties
+    x = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], dtype=np.float32)
+    softx = softmax(x)
+    assert softx.dtype == np.float32
+    assert np.allclose(softx, 1 / 3)

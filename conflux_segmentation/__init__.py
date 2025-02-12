@@ -1,3 +1,3 @@
-from .binary_segmenter import BinarySegmentationResult, BinarySegmenter
+from .segmenter import Segmenter
 
-__all__ = ["BinarySegmentationResult", "BinarySegmenter"]
+__all__ = ["Segmenter"]
