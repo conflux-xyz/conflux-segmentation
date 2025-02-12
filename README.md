@@ -17,6 +17,7 @@ For [PyTorch](https://pytorch.org/) (e.g. with [Segmentation Models PyTorch](htt
 ```python
 # $ pip install segmentation-models-pytorch
 import segmentation_models_pytorch as smp
+import torch
 from conflux_segmentation import Segmenter
 
 net = smp.Unet(encoder_name="tu-mobilenetv3_small_100", encoder_weights=None, activation=None)
