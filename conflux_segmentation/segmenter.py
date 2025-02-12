@@ -1,11 +1,21 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import numpy.typing as npt
 
 from .tile_segmenter import TileSegmenterBase
 from .segmentation_result import SegmentationResult
-from .utils import ActivationType, BlendModeType, gaussian_weights, get_padding
+from .utils import gaussian_weights, get_padding
+from .types import ActivationType, BlendModeType
+from .defaults import (
+    DEFAULT_ACTIVATION,
+    DEFAULT_NUM_CLASSES,
+    DEFAULT_TILE_SIZE,
+    DEFAULT_OVERLAP,
+    DEFAULT_BLEND_MODE,
+    DEFAULT_PAD_VALUE,
+    DEFAULT_BATCH_SIZE,
+)
 
 if TYPE_CHECKING:
     import torch
@@ -17,18 +27,18 @@ class Segmenter:
         self,
         tile_segmenter: TileSegmenterBase,
         *,
-        num_classes: int = 1,
-        tile_size: int = 512,
-        overlap: float = 0.125,
-        blend_mode: BlendModeType = "gaussian",
-        pad_value: int = 255,
-        batch_size: int = 1,
+        num_classes: int = DEFAULT_NUM_CLASSES,
+        tile_size: int = DEFAULT_TILE_SIZE,
+        overlap: float = DEFAULT_OVERLAP,
+        blend_mode: BlendModeType = DEFAULT_BLEND_MODE,
+        pad_value: int = DEFAULT_PAD_VALUE,
+        batch_size: int = DEFAULT_BATCH_SIZE,
     ) -> None:
         assert num_classes > 0, "Number of classes must be greater than 0"
         self.num_classes = num_classes
         self.tile_segmenter = tile_segmenter
         if blend_mode == "gaussian":
-            # Expand dims to [H, W, 1] to broadcast across channels
+            # Expand dims to [H, W, 1] to broadcast across classes
             self.blend_weights = gaussian_weights(tile_size)[..., None]
         else:
             self.blend_weights = np.ones((tile_size, tile_size, 1), dtype=np.float32)
@@ -45,7 +55,6 @@ class Segmenter:
         H, W, _C = image.shape
         pad_y = get_padding(H, self.tile_size, self.stride)
         pad_x = get_padding(W, self.tile_size, self.stride)
-        # Padding with 255 is important -- that is how it was trained.
         image_padded = np.pad(
             image,
             (pad_y, pad_x, (0, 0)),
@@ -106,17 +115,18 @@ class Segmenter:
     def from_pytorch_module(
         model: "torch.nn.Module",
         *,
-        activation: ActivationType = None,
-        num_classes: int = 1,
-        tile_size: int = 512,
-        overlap: float = 0.125,
-        blend_mode: BlendModeType = "gaussian",
-        pad_value: int = 255,
-        batch_size: int = 1,
+        activation: ActivationType = DEFAULT_ACTIVATION,
+        device: Optional["torch.device"] = None,
+        num_classes: int = DEFAULT_NUM_CLASSES,
+        tile_size: int = DEFAULT_TILE_SIZE,
+        overlap: float = DEFAULT_OVERLAP,
+        blend_mode: BlendModeType = DEFAULT_BLEND_MODE,
+        pad_value: int = DEFAULT_PAD_VALUE,
+        batch_size: int = DEFAULT_BATCH_SIZE,
     ) -> "Segmenter":
         from .torch import TorchTileSegmenter
 
-        tile_segmenter = TorchTileSegmenter(model, activation=activation)
+        tile_segmenter = TorchTileSegmenter(model, activation=activation, device=device)
         return Segmenter(
             tile_segmenter,
             num_classes=num_classes,
@@ -131,13 +141,13 @@ class Segmenter:
     def from_onnxruntime_session(
         session: "ort.InferenceSession",
         *,
-        activation: ActivationType = None,
-        num_classes: int = 1,
-        tile_size: int = 512,
-        overlap: float = 0.125,
-        blend_mode: BlendModeType = "gaussian",
-        pad_value: int = 255,
-        batch_size: int = 1,
+        activation: ActivationType = DEFAULT_ACTIVATION,
+        num_classes: int = DEFAULT_NUM_CLASSES,
+        tile_size: int = DEFAULT_TILE_SIZE,
+        overlap: float = DEFAULT_OVERLAP,
+        blend_mode: BlendModeType = DEFAULT_BLEND_MODE,
+        pad_value: int = DEFAULT_PAD_VALUE,
+        batch_size: int = DEFAULT_BATCH_SIZE,
     ) -> "Segmenter":
         from .onnx import OnnxBinaryTileSegmenter
 

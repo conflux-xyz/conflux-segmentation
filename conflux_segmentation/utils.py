@@ -1,10 +1,7 @@
-from typing import Literal, Optional
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-
-ActivationType = Optional[Literal["sigmoid", "softmax"]]
-BlendModeType = Literal["gaussian", "flat"]
 
 
 def softmax(x: npt.NDArray[np.float32], axis=1) -> npt.NDArray[np.float32]:

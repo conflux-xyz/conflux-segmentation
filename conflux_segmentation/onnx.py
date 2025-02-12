@@ -5,7 +5,9 @@ import numpy.typing as npt
 import onnxruntime as ort  # type: ignore[import-untyped]
 
 from .tile_segmenter import TileSegmenterBase
-from .utils import ActivationType, sigmoid, softmax
+from .utils import sigmoid, softmax
+from .types import ActivationType
+from .defaults import DEFAULT_ACTIVATION
 
 
 class OnnxBinaryTileSegmenter(TileSegmenterBase):
@@ -13,8 +15,15 @@ class OnnxBinaryTileSegmenter(TileSegmenterBase):
         self,
         session: ort.InferenceSession,
         *,
-        activation: ActivationType = None,
+        activation: ActivationType = DEFAULT_ACTIVATION,
     ) -> None:
+        """
+        Wraps a ONNX model for segmentation.
+        We assume that given an input of shape (N, C, H, W), the model returns an output of shape (N, K, H, W).
+        If the model outputs logits, then you must set `activation="sigmoid"` for binary or multiclass segmentation or
+        `activation="softmax"` for multiclass.
+        If `activation=None`, we assume the model has already normalized the outputs.
+        """
         self.session = session
         self.activation = activation
         assert len(self.session.get_inputs()) == 1, "Model must have exactly 1 input"

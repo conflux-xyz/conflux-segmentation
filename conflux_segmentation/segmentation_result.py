@@ -3,6 +3,8 @@ from typing import Sequence
 import numpy as np
 import numpy.typing as npt
 
+from .defaults import DEFAULT_THRESHOLD
+
 
 class SegmentationResult:
     def __init__(
@@ -38,7 +40,7 @@ class BinarySegmentationResult:
     ) -> None:
         self.probabilities = probabilities
 
-    def get_mask(self, threshold: float = 0.5) -> npt.NDArray[np.bool_]:
+    def get_mask(self, threshold: float = DEFAULT_THRESHOLD) -> npt.NDArray[np.bool_]:
         """
         Returns a H x W boolean mask `out` where `out[h,w]` indicates whether the pixel at (h, w)
         is in the positive class.
@@ -89,7 +91,7 @@ class MultilabelSegmentationResult:
         self.probabilities = probabilities
 
     def get_mask(
-        self, threshold: float | Sequence[float] = 0.5
+        self, threshold: float | Sequence[float] = DEFAULT_THRESHOLD
     ) -> npt.NDArray[np.bool_]:
         """
         Returns a H x W x C array `out` where `out[h,w,c]` whether the pixel at (h, w)
