@@ -13,7 +13,7 @@ repository = "https://github.com/conflux-xyz/conflux-segmentation"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-numpy = "^1"
+numpy = ">=1,<3"
 torch = {version = "^2", optional = true}
 onnxruntime = {version = "^1", optional = true}
 
