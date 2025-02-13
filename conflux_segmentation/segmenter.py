@@ -6,7 +6,7 @@ import numpy.typing as npt
 from .tile_segmenter import TileSegmenterBase
 from .segmentation_result import SegmentationResult
 from .utils import gaussian_weights, get_padding
-from .types import ActivationType, BlendModeType
+from .types import ActivationType, BlendModeType, TilesTransformType
 from .defaults import (
     DEFAULT_ACTIVATION,
     DEFAULT_NUM_CLASSES,
@@ -15,6 +15,7 @@ from .defaults import (
     DEFAULT_BLEND_MODE,
     DEFAULT_PAD_VALUE,
     DEFAULT_BATCH_SIZE,
+    DEFAULT_TILES_TRANSFORM,
 )
 
 if TYPE_CHECKING:
@@ -115,6 +116,7 @@ class Segmenter:
     def from_torch(
         model: "torch.nn.Module",
         *,
+        transform: TilesTransformType = DEFAULT_TILES_TRANSFORM,
         activation: ActivationType = DEFAULT_ACTIVATION,
         device: Optional["torch.device"] = None,
         num_classes: int = DEFAULT_NUM_CLASSES,
@@ -126,7 +128,9 @@ class Segmenter:
     ) -> "Segmenter":
         from .torch import TorchTileSegmenter
 
-        tile_segmenter = TorchTileSegmenter(model, activation=activation, device=device)
+        tile_segmenter = TorchTileSegmenter(
+            model, transform=transform, activation=activation, device=device
+        )
         return Segmenter(
             tile_segmenter,
             num_classes=num_classes,
@@ -141,6 +145,7 @@ class Segmenter:
     def from_onnx(
         session: "ort.InferenceSession",
         *,
+        transform: TilesTransformType = DEFAULT_TILES_TRANSFORM,
         activation: ActivationType = DEFAULT_ACTIVATION,
         num_classes: int = DEFAULT_NUM_CLASSES,
         tile_size: int = DEFAULT_TILE_SIZE,
@@ -151,7 +156,9 @@ class Segmenter:
     ) -> "Segmenter":
         from .onnx import OnnxTileSegmenter
 
-        tile_segmenter = OnnxTileSegmenter(session, activation=activation)
+        tile_segmenter = OnnxTileSegmenter(
+            session, transform=transform, activation=activation
+        )
         return Segmenter(
             tile_segmenter,
             num_classes=num_classes,
