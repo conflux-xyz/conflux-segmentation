@@ -65,10 +65,16 @@ def test_binary_segmenter_call():
     assert mask.shape == (100, 100)
 
     # Verify padding doesn't change output dimensions
-    image = np.zeros((50, 75, 3), dtype=np.uint8)
-    result = segmenter(image).to_binary()
-    mask = result.get_mask()
-    assert mask.shape == (50, 75)
+    sizes = [
+        ((50, 75, 3), (50, 75)),
+        ((64, 75, 3), (64, 75)),
+        ((128, 75, 3), (128, 75)),
+    ]
+    for input_size, output_size in sizes:
+        image = np.zeros(input_size, dtype=np.uint8)
+        result = segmenter(image).to_binary()
+        mask = result.get_mask()
+        assert mask.shape == output_size
 
 
 def test_binary_invalid_input():
