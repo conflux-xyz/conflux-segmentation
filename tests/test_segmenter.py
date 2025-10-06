@@ -68,6 +68,7 @@ def test_binary_segmenter_call():
     sizes = [
         ((50, 75, 3), (50, 75)),
         ((64, 75, 3), (64, 75)),
+        ((128, 75, 3), (128, 75)),
     ]
     for input_size, output_size in sizes:
         image = np.zeros(input_size, dtype=np.uint8)
