@@ -65,7 +65,9 @@ class Segmenter:
         padded_h = image_padded.shape[0]
         padded_w = image_padded.shape[1]
         probs_padded = self._segment_padded(image_padded)
-        probs = probs_padded[pad_y[0] : padded_h-pad_y[1], pad_x[0] : padded_w-pad_x[1]]
+        probs = probs_padded[
+            pad_y[0] : padded_h - pad_y[1], pad_x[0] : padded_w - pad_x[1]
+        ]
         return probs
 
     def _segment_padded(self, image: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
