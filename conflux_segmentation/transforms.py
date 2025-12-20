@@ -7,6 +7,12 @@ IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
 class Normalize:
+    """
+    Normalize tiles using the given mean and std.
+    Similar to torchvision.transforms.Normalize (https://docs.pytorch.org/vision/main/generated/torchvision.transforms.Normalize.html).
+    and albumentations.Normalize (https://explore.albumentations.ai/transform/Normalize).
+    """
+
     def __init__(
         self,
         mean: Sequence[float] = IMAGENET_MEAN,
@@ -31,6 +37,10 @@ class Normalize:
 
 
 class ToFloat32:
+    """
+    Convert tiles from uint8 [0, max_pixel_value] (generally [0, 255]) to float32 [0.0, 1.0].
+    """
+
     def __init__(self, max_pixel_value: float = 255.0):
         self.max_pixel_value = max_pixel_value
 
