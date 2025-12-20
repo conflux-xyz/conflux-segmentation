@@ -28,10 +28,10 @@ class TestNormalize:
 
         assert norm.dims == 3
         np.testing.assert_array_almost_equal(
-            norm.mean.squeeze(), np.array(custom_mean, dtype=np.float32)
+            norm.mean.squeeze(), np.array(custom_mean, dtype=np.float32) * 255.0
         )
         np.testing.assert_array_almost_equal(
-            norm.std.squeeze(), np.array(custom_std, dtype=np.float32)
+            norm.std.squeeze(), np.array(custom_std, dtype=np.float32) * 255.0
         )
 
     def test_init_mismatched_mean_std_length(self):
