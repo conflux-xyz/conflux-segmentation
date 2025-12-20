@@ -22,9 +22,12 @@ class Normalize:
         dims = len(mean)
         assert dims == len(std), "Mean and std must have the same length"
         self.dims = dims
-        self.mean = np.array(mean, dtype=np.float32).reshape(1, -1, 1, 1)
-        self.std = np.array(std, dtype=np.float32).reshape(1, -1, 1, 1)
-        self.max_pixel_value = max_pixel_value
+        self.mean = (np.array(mean).reshape(1, -1, 1, 1) * max_pixel_value).astype(
+            np.float32
+        )
+        self.std = (np.array(std).reshape(1, -1, 1, 1) * max_pixel_value).astype(
+            np.float32
+        )
 
     def __call__(self, tiles: npt.NDArray[np.uint8]) -> npt.NDArray[np.float32]:
         assert tiles.ndim == 4, "Input tiles must have 4 dimensions (N, C, H, W)"
@@ -32,8 +35,7 @@ class Normalize:
             f"Input tiles must have {self.dims} channels"
         )
         # Transform tiles (N, C, H, W) from uint8 [0, 255] to float32 normalized
-        tiles32 = tiles.astype(np.float32) / self.max_pixel_value
-        return (tiles32 - self.mean) / self.std
+        return (tiles.astype(np.float32) - self.mean) / self.std
 
 
 class ToFloat32:
