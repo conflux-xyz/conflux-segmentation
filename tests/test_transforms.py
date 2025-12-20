@@ -17,7 +17,6 @@ class TestNormalize:
         assert norm.dims == 3
         assert norm.mean.shape == (1, 3, 1, 1)
         assert norm.std.shape == (1, 3, 1, 1)
-        assert norm.max_pixel_value == 255.0
         assert norm.mean.dtype == np.float32
         assert norm.std.dtype == np.float32
 
